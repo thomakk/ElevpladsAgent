@@ -5,7 +5,7 @@ on:
     # Kl. 08:00 dansk tid (UTC+2 om sommeren = 06:00 UTC)
     - cron: "0 6 * * *"
     # Kl. 18:00 dansk tid (UTC+2 om sommeren = 16:00 UTC)
-    - cron: "0 20 * * *"
+    - cron: "0 16 * * *"
   # Gør det muligt at køre manuelt fra GitHub-siden
   workflow_dispatch:
     inputs:
@@ -17,13 +17,15 @@ on:
 jobs:
   check-elevpladser:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Hent kode
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Opsæt Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.12"
 
@@ -32,7 +34,7 @@ jobs:
 
       # Gendan cache med tidligere sete opslag så vi undgår dubletter
       - name: Gendan seen_listings cache
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.3
         with:
           path: seen_listings.json
           key: seen-listings-cache
@@ -50,7 +52,7 @@ jobs:
 
       - name: Gem opdateret seen_listings cache
         if: always()
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.3
         with:
           path: seen_listings.json
           key: seen-listings-cache
