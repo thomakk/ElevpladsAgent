@@ -1,0 +1,56 @@
+name: Elevplads-agent Randers
+
+on:
+  schedule:
+    # Kl. 08:00 dansk tid (UTC+2 om sommeren = 06:00 UTC)
+    - cron: "0 6 * * *"
+    # Kl. 18:00 dansk tid (UTC+2 om sommeren = 16:00 UTC)
+    - cron: "0 16 * * *"
+  # Gør det muligt at køre manuelt fra GitHub-siden
+  workflow_dispatch:
+    inputs:
+      send_always:
+        description: "Send email selvom ingen nye opslag"
+        required: false
+        default: "false"
+
+jobs:
+  check-elevpladser:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Hent kode
+        uses: actions/checkout@v4
+
+      - name: Opsæt Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installér afhængigheder
+        run: pip install anthropic
+
+      # Gendan cache med tidligere sete opslag så vi undgår dubletter
+      - name: Gendan seen_listings cache
+        uses: actions/cache@v4
+        with:
+          path: seen_listings.json
+          key: seen-listings-cache
+          restore-keys: seen-listings-cache
+
+      - name: Kør elevplads-agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          SEARCH_KEYWORD: ${{ vars.SEARCH_KEYWORD || 'elevplads Randers' }}
+          SEND_ALWAYS: ${{ github.event.inputs.send_always || 'false' }}
+        run: python check_elevpladser.py
+
+      - name: Gem opdateret seen_listings cache
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: seen_listings.json
+          key: seen-listings-cache
