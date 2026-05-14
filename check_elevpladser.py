@@ -30,7 +30,7 @@ Returnér KUN et JSON-objekt uden markdown eller forklaring:
 Maks 10 opslag. Hvis ingen: {{"listings": []}}"""
 
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5-20250929",
         max_tokens=1000,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{"role": "user", "content": prompt}],
