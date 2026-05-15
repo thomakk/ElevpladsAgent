@@ -3,7 +3,7 @@ name: Elevplads-agent Randers
 on:
   schedule:
     # Kl. 08:00 dansk tid (UTC+2 om sommeren = 06:00 UTC)
-    - cron: "03 7 * * *"
+    - cron: "13 7 * * *"
     # Kl. 18:00 dansk tid (UTC+2 om sommeren = 16:00 UTC)
     - cron: "0 16 * * *"
   # Gør det muligt at køre manuelt fra GitHub-siden
