@@ -8,9 +8,19 @@ import smtplib
 import json
 import os
 import hashlib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    filename="log.txt",
+    level=logging.INFO,
+    format="%(asctime)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    encoding="utf-8"
+)
 
 
 def search_elevpladser(keyword: str = "elevplads Randers") -> list[dict]:
@@ -29,9 +39,6 @@ Returnér KUN et JSON-objekt uden markdown eller forklaring:
 
 Maks 10 opslag. Hvis ingen: {{"listings": []}}"""
 
-    now = datetime.now()
-    formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
-    
     try:
         response = client.messages.create(
             model="claude-sonnet-4-5-20250929",
@@ -63,15 +70,13 @@ Maks 10 opslag. Hvis ingen: {{"listings": []}}"""
                     listings = []
         
         # Log successful run
-        with open("log.txt", "a", encoding="utf-8") as file:
-            file.write(f"{formatted_now} - Found {len(listings)} listings\n")
+        logging.info(f"Found {len(listings)} listings")
         
         return listings
     
     except Exception as e:
         # Log error
-        with open("log.txt", "a", encoding="utf-8") as file:
-            file.write(f"{formatted_now} - ERROR: {str(e)}\n")
+        logging.error(f"ERROR: {str(e)}", exc_info=True)
         raise
 
 
@@ -151,6 +156,7 @@ def send_email(subject: str, body: str):
         server.login(sender, password)
         server.sendmail(sender, recipient, msg.as_string())
     print(f"✅ Email sendt til {recipient}")
+    logging.info(f"Email sent to {recipient}")
 
 
 def main():
@@ -158,10 +164,7 @@ def main():
     seen_file = os.environ.get("SEEN_FILE", "seen_listings.json")
 
     # Log script start
-    now = datetime.now()
-    formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
-    with open("log.txt", "a", encoding="utf-8") as file:
-        file.write(f"{formatted_now} - Script started\n")
+    logging.info("Script started")
 
     print(f"🔍 Søger efter: {keyword}")
     listings = search_elevpladser(keyword)
@@ -171,6 +174,7 @@ def main():
     seen = load_seen_hashes(seen_file)
     new_listings = [l for l in listings if listing_hash(l) not in seen]
     print(f"   Heraf {len(new_listings)} nye siden sidst")
+    logging.info(f"Found {len(new_listings)} new listings")
 
     # Opdater gemte hashes
     for l in listings:
@@ -184,6 +188,7 @@ def main():
         send_email(subject, body)
     else:
         print("ℹ️  Ingen nye opslag — sender ikke email.")
+        logging.info("No new listings - email not sent")
 
 
 if __name__ == "__main__":
