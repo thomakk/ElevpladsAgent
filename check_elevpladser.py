@@ -157,6 +157,12 @@ def main():
     keyword = os.environ.get("SEARCH_KEYWORD", "elevplads Randers")
     seen_file = os.environ.get("SEEN_FILE", "seen_listings.json")
 
+    # Log script start
+    now = datetime.now()
+    formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
+    with open("log.txt", "a", encoding="utf-8") as file:
+        file.write(f"{formatted_now} - Script started\n")
+
     print(f"🔍 Søger efter: {keyword}")
     listings = search_elevpladser(keyword)
     print(f"   Fandt {len(listings)} opslag")
