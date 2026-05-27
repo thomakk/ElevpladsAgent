@@ -29,6 +29,14 @@ Returnér KUN et JSON-objekt uden markdown eller forklaring:
 
 Maks 10 opslag. Hvis ingen: {{"listings": []}}"""
 
+    now = datetime.now()
+
+    # Format as YYYY-MM-DD HH:MM:SS
+    formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
+    
+    with open("log.txt", "a", encoding="utf-8") as file:
+    file.write(formatted.now")
+
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
         max_tokens=1000,
