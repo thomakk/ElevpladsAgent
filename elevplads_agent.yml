@@ -2,8 +2,8 @@ name: Elevplads-agent Randers
 
 on:
   schedule:
-    # Kl. 08:00 dansk tid (UTC+2 om sommeren = 06:00 UTC)
-    - cron: "0 6 * * *"
+    # Kl. 14:00 dansk tid (UTC+2 om sommeren = 12:00 UTC)
+    - cron: "0 12 * * *"
     # Kl. 18:00 dansk tid (UTC+2 om sommeren = 16:00 UTC)
     - cron: "0 16 * * *"
   # Gør det muligt at køre manuelt fra GitHub-siden
@@ -11,22 +11,22 @@ on:
     inputs:
       send_always:
         description: "Send email selvom ingen nye opslag"
-        required: false
-        default: "false"
+        required: true
+        default: true
 
 jobs:
   check-elevpladser:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write # Explicitly allows pushing changes
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
+      - run: echo "Cron job started!"
       - name: Hent kode
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Opsæt Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.12"
 
@@ -35,7 +35,7 @@ jobs:
 
       # Gendan cache med tidligere sete opslag så vi undgår dubletter
       - name: Gendan seen_listings cache
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.3
         with:
           path: seen_listings.json
           key: seen-listings-cache
@@ -53,15 +53,17 @@ jobs:
 
       - name: Gem opdateret seen_listings cache
         if: always()
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.3
         with:
           path: seen_listings.json
           key: seen-listings-cache
 
-      - name: Commit and Push Changes
+      - name: Commit og push log.txt
+        if: always()
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@://github.com"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add log.txt
-          git commit -m "Automated update from Python script" || echo "No changes to commit"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update logs - $(date +'%Y-%m-%d %H:%M:%S')"
           git push
+          
