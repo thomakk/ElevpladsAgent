@@ -190,6 +190,9 @@ def main():
         print("ℹ️  Ingen nye opslag — sender ikke email.")
         logging.info("No new listings - email not sent")
 
+    # Ensure all log messages are flushed to disk
+    logging.shutdown()
+
 
 if __name__ == "__main__":
     main()
