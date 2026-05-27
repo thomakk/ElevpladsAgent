@@ -25,47 +25,54 @@ Inkluder alle typer: EUD/erhvervsuddannelse, kontor/admin, handel, SOSU, teknisk
 Søgeord: "{keyword}"
 
 Returnér KUN et JSON-objekt uden markdown eller forklaring:
-{{"listings": [{{"title": "stillingsbetegnelse", "company": "virksomhedsnavn", "type": "uddannelsestype fx EUD/Handel/SOSU/Kontor", "deadline": "ansøgningsfrist eller Hurtigst muligt", "start": "opstartstidspunkt eller ukendt", "url": "direkte link eller null", "source": "Jobnet/Elevplads.dk/Elevportalen/andet"}}]}}
+{{"listings": [{{"title": "stillingsbetegnelse", "company": "virksomhedsnavn", "type": "uddannelsestype fx EUD/Handel/SOSU/Kontor", "deadline": "ansøgningsfrist eller Hurtigst muligt", "start": "[...]
 
 Maks 10 opslag. Hvis ingen: {{"listings": []}}"""
 
     now = datetime.now()
-
-    # Format as YYYY-MM-DD HH:MM:SS
     formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
     
-    with open("log.txt", "a", encoding="utf-8") as file:
-        file.write(formatted_now)
-
-    response = client.messages.create(
-        model="claude-sonnet-4-5-20250929",
-        max_tokens=1000,
-        tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    # Udtræk tekst fra responsen
-    json_str = ""
-    for block in response.content:
-        if block.type == "text":
-            json_str += block.text
-
-    # Rens og parsér JSON
-    json_str = json_str.replace("```json", "").replace("```", "").strip()
     try:
-        data = json.loads(json_str)
-        return data.get("listings", [])
-    except json.JSONDecodeError:
-        # Forsøg at finde JSON-objekt i teksten
-        import re
-        match = re.search(r"\{[\s\S]*\}", json_str)
-        if match:
-            try:
-                data = json.loads(match.group())
-                return data.get("listings", [])
-            except Exception:
-                pass
-    return []
+        response = client.messages.create(
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=1000,
+            tools=[{"type": "web_search_20250305", "name": "web_search"}],
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Udtræk tekst fra responsen
+        json_str = ""
+        for block in response.content:
+            if block.type == "text":
+                json_str += block.text
+
+        # Rens og parsér JSON
+        json_str = json_str.replace("```json", "").replace("```", "").strip()
+        try:
+            data = json.loads(json_str)
+            listings = data.get("listings", [])
+        except json.JSONDecodeError:
+            # Forsøg at finde JSON-objekt i teksten
+            import re
+            match = re.search(r"\{[\s\S]*\}", json_str)
+            if match:
+                try:
+                    data = json.loads(match.group())
+                    listings = data.get("listings", [])
+                except Exception:
+                    listings = []
+        
+        # Log successful run
+        with open("log.txt", "a", encoding="utf-8") as file:
+            file.write(f"{formatted_now} - Found {len(listings)} listings\n")
+        
+        return listings
+    
+    except Exception as e:
+        # Log error
+        with open("log.txt", "a", encoding="utf-8") as file:
+            file.write(f"{formatted_now} - ERROR: {str(e)}\n")
+        raise
 
 
 def load_seen_hashes(filepath: str = "seen_listings.json") -> set:
