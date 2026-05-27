@@ -59,9 +59,9 @@ jobs:
           key: seen-listings-cache
 
       - name: Commit and Push Changes
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@://github.com"
-        git add log.txt
-        git commit -m "Automated update from Python script" || echo "No changes to commit"
-        git push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add log.txt
+          git commit -m "Automated update from Python script" || echo "No changes to commit"
+          git push
