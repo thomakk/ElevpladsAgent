@@ -18,6 +18,9 @@ jobs:
   check-elevpladser:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write # Explicitly allows pushing changes
+
     steps:
       - name: Hent kode
         uses: actions/checkout@v4
